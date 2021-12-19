@@ -20,6 +20,7 @@ namespace Impostor.Plugins.EBPlugin
         private IDisposable _uregChatCommands;
         private IDisposable _uregCustomStatusManager;
         private IDisposable _uregAssignRoles;
+        private IDisposable _uregOnPlayerDie;
         public EmptyBottlePlugin(ILogger<EmptyBottlePlugin> logger, IEventManager eventManager)
         {
             _logger = logger;
@@ -31,6 +32,7 @@ namespace Impostor.Plugins.EBPlugin
             _uregChatCommands = _eventManager.RegisterListener(new ChatCommands(_logger));
             _uregCustomStatusManager = _eventManager.RegisterListener(new CustomStatusManager(_logger));
             _uregAssignRoles = _eventManager.RegisterListener(new assignRoles(_logger));
+            _uregOnPlayerDie = _eventManager.RegisterListener(new onPlayerDie(_logger));
             return default;
         }
         public override ValueTask DisableAsync()
@@ -39,7 +41,11 @@ namespace Impostor.Plugins.EBPlugin
             _uregChatCommands.Dispose();
             _uregCustomStatusManager.Dispose();
             _uregAssignRoles.Dispose();
+            _uregOnPlayerDie.Dispose();
             return default;
         }
+    }
+    public enum customRPC {
+        jesterWin = 0
     }
 }

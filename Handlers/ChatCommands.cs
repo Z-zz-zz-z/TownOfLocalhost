@@ -175,15 +175,6 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                         e.ClientPlayer.Character.SendChatToPlayerAsync(PIDFail);
                     }
                 }
-                if(cmd1 == "speed") {
-                    _logger.LogInformation("設定変更テスト");
-                    var CustomOption = e.Game.Options;
-                    CustomOption.PlayerSpeedMod = CustomOption.PlayerSpeedMod * 3f;
-                    var writer2 = e.Game.StartRpc(e.ClientPlayer.Character.NetId, RpcCalls.CompleteTask, e.ClientPlayer.Character.PlayerId);
-                    Rpc02SyncSettings.Serialize(writer2, CustomOption);
-                    e.Game.SendToAsync(writer2, e.ClientPlayer.Character.PlayerId);
-                    e.Game.FinishRpcAsync(writer2);
-                }
                 if(cmd1 == "idlist") {
                     foreach(var player in e.Game.Players) {
                         e.PlayerControl.SendChatToPlayerAsync(player.Character.PlayerInfo.PlayerName + ":" + player.Character.PlayerId);
