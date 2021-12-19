@@ -21,6 +21,7 @@ namespace Impostor.Plugins.EBPlugin
         private IDisposable _uregCustomStatusManager;
         private IDisposable _uregAssignRoles;
         private IDisposable _uregOnPlayerDie;
+        private IDisposable _uregPlayerTaskManager;
         public EmptyBottlePlugin(ILogger<EmptyBottlePlugin> logger, IEventManager eventManager)
         {
             _logger = logger;
@@ -33,6 +34,7 @@ namespace Impostor.Plugins.EBPlugin
             _uregCustomStatusManager = _eventManager.RegisterListener(new CustomStatusManager(_logger));
             _uregAssignRoles = _eventManager.RegisterListener(new assignRoles(_logger));
             _uregOnPlayerDie = _eventManager.RegisterListener(new onPlayerDie(_logger));
+            _uregPlayerTaskManager = _eventManager.RegisterListener(new PlayerTaskManager(_logger));
             return default;
         }
         public override ValueTask DisableAsync()
@@ -42,6 +44,7 @@ namespace Impostor.Plugins.EBPlugin
             _uregCustomStatusManager.Dispose();
             _uregAssignRoles.Dispose();
             _uregOnPlayerDie.Dispose();
+            _uregPlayerTaskManager.Dispose();
             return default;
         }
     }
