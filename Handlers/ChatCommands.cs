@@ -61,7 +61,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     if(int.TryParse(cmd2, out cmd2int)) {
                         settings.MadmateCount = cmd2int;
                         PlayerCTRL.SendChatToPlayerAsync("Madmateを" + cmd2 + "人に設定しました\r\n" + 
-                        "エンジニアを一人Jesterに置き換えます");
+                        "エンジニアを一人Madmateに置き換えます");
                     } else {
                         PlayerCTRL.SendChatToPlayerAsync(PIDFail);
                     }
@@ -71,7 +71,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     if(int.TryParse(cmd2, out cmd2int)) {
                         settings.SheriffCount = cmd2int;
                         PlayerCTRL.SendChatToPlayerAsync("Sheriffを" + cmd2 + "人に設定しました\r\n" + 
-                        "インポスターを一人Jesterに置き換えます");
+                        "インポスターを一人Madmateに置き換えます");
                     } else {
                         PlayerCTRL.SendChatToPlayerAsync(PIDFail);
                     }

@@ -47,7 +47,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
             }
-            _logger.LogInformation("残りタスク:" + remainingTasks);
+            //_logger.LogInformation("残りタスク:" + remainingTasks);
             if(remainingTasks <= 0) {
                 foreach(var p in e.Game.Players) {foreach(var t in p.Character.PlayerInfo.Tasks) {
                     t.CompleteAsync();

@@ -88,7 +88,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
             }
             var assignID = rand.Next(valid.Count);
             status.PlayerRoles.Add(valid[assignID].Character.PlayerId, role);
-            _logger.LogInformation(role.ToString() + " => " + valid[assignID].Character.PlayerInfo.PlayerName);
+            _logger.LogInformation(role.ToString() + " => " + /*valid[assignID].Character.PlayerInfo.PlayerName*/" - ");
         }
         public void noticeRoleByName(Api.Net.IClientPlayer player, customRoles role, Api.Games.IGame Game) {
             string beforeName = player.Character.PlayerInfo.PlayerName;
