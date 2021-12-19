@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Impostor\src\Impostor.Api\Impostor.Api.csproj"/>
+    <ProjectReference Include="..\Impostor\src\Impostor.Hazel\Hazel\Hazel.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ExtraPlayerFunctions" Version="1.0.4"/>
+  </ItemGroup>
+</Project>
