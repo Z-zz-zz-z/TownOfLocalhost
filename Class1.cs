@@ -17,7 +17,9 @@ namespace Impostor.Plugins.EBPlugin
     {
         private readonly ILogger<EmptyBottlePlugin> _logger;
         private readonly IEventManager _eventManager;
-        private IDisposable _unregister;
+        private IDisposable _uregChatCommands;
+        private IDisposable _uregCustomStatusManager;
+        private IDisposable _uregAssignRoles;
         public EmptyBottlePlugin(ILogger<EmptyBottlePlugin> logger, IEventManager eventManager)
         {
             _logger = logger;
@@ -26,13 +28,17 @@ namespace Impostor.Plugins.EBPlugin
         public override ValueTask EnableAsync()
         {
             _logger.LogInformation("EmptyBottlePlugin is being enabled.");
-            _unregister = _eventManager.RegisterListener(new GameEventListener(_logger));
+            _uregChatCommands = _eventManager.RegisterListener(new ChatCommands(_logger));
+            _uregCustomStatusManager = _eventManager.RegisterListener(new CustomStatusManager(_logger));
+            _uregAssignRoles = _eventManager.RegisterListener(new assignRoles(_logger));
             return default;
         }
         public override ValueTask DisableAsync()
         {
             _logger.LogInformation("EmptyBottlePlugin is being disabled.");
-            _unregister.Dispose();
+            _uregChatCommands.Dispose();
+            _uregCustomStatusManager.Dispose();
+            _uregAssignRoles.Dispose();
             return default;
         }
     }
