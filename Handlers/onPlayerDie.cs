@@ -34,7 +34,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
             if(status.getRole(e.PlayerControl.PlayerId) == customRoles.Jester && !status.isJesterDead) {
                 Task task = Task.Run(() => {
                     Thread.Sleep(12000);
-                    statusController.forceSoloWin(e.ClientPlayer, customRPC.jesterWin, e.Game, "Jester wins");
+                    statusController.forceSoloWin(e.ClientPlayer, customRPC.jesterWin, e.Game, "Jester wins", soloWinReason.Jester);
                 });
             }
         }

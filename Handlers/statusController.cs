@@ -22,7 +22,15 @@ namespace Impostor.Plugins.EBPlugin.Handlers
     public class statusController
     {
         static System.Random rand = new System.Random();
-        public static void forceSoloWin(Api.Net.IClientPlayer player, customRPC customRPC, Api.Games.IGame Game, string winMessage = null) {
+        public static void forceSoloWin(Api.Net.IClientPlayer player, customRPC customRPC, Api.Games.IGame Game, string winMessage = null, soloWinReason reason = soloWinReason.empty) {
+            //全員へのRPC
+            foreach(var p in Game.Players) {
+                var writer = Game.StartRpc(p.Character.NetId, (RpcCalls)CustomRPC.SoloWin, p.Client.Id);
+                writer.Write(player.Character.PlayerId);
+                writer.Write((byte)reason);
+                Game.FinishRpcAsync(writer);
+            }
+
             Api.Net.IClientPlayer imp = null;
             Api.Net.IClientPlayer deadImp = null;
             List<Api.Net.IClientPlayer> ImpToRemove = new List<Api.Net.IClientPlayer>();

@@ -35,38 +35,61 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                 List<Api.Net.IClientPlayer> Engineers = new List<Api.Net.IClientPlayer>();
                 List<Api.Net.IClientPlayer> Impostors = new List<Api.Net.IClientPlayer>();
                 List<Api.Net.IClientPlayer> Shapeshifters = new List<Api.Net.IClientPlayer>();
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
+                var successToGetStatus = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out var status);
+                if(!successToGetStatus) _logger.LogError("ゲーム開始処理に失敗しました:CustomStatusの取得に失敗しました");
                 foreach(var p in e.Game.Players) {
                     _logger.LogInformation("Started:" + p.Character.PlayerInfo.RoleType.ToString()
                      + "(" + /*p.Character.PlayerInfo.PlayerName*/" - " + ")");
                     switch(p.Character.PlayerInfo.RoleType) {
                         case RoleTypes.Crewmate:
                             Crewmates.Add(p);
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                         case RoleTypes.Impostor:
                             Impostors.Add(p);
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Impostor);
                             break;
                         case RoleTypes.Scientist:
                             Scientists.Add(p);
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                         case RoleTypes.Engineer:
                             Engineers.Add(p);
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                         case RoleTypes.Shapeshifter:
                             Shapeshifters.Add(p);
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Impostor);
                             break;
                         default:
+                            _logger.LogWarning("警告:役職不明のプレイヤー(" + p.Character.PlayerInfo.PlayerName + ")");
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                     }
                 }
+                _logger.LogInformation("役職の取得とリスト化に成功");
                 var succesToGetSettings = CustomStatusHolder.SettingsHolder.TryGetValue(e.Game.Code, out var settings);
                 if(!succesToGetSettings) _logger.LogError("ゲーム開始処理に失敗しました:CustomOptionsの取得に失敗しました");
+
                 for(var i = 0; i < settings.JesterCount; i++) setRoleInList(e.Game.Code, Crewmates, customRoles.Jester);
                 for(var i = 0; i < settings.MadmateCount; i++) setRoleInList(e.Game.Code, Engineers, customRoles.Madmate);
+                
+                successToGetStatus = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out status);
+                if(!successToGetStatus) _logger.LogError("ゲーム開始処理に失敗しました:CustomStatusの取得に失敗しました");
                 //役職通知
-                var successToGetStatus = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out var status);
-                if(!succesToGetSettings) _logger.LogError("ゲーム開始処理に失敗しました:CustomStatusの取得に失敗しました");
+                _logger.LogInformation("追加役職のデータをbyte配列に変換します");
+                byte[] AllRoles = new byte[15];
                 foreach(var p in e.Game.Players) {
+                    AllRoles.SetValue((byte)status.getRole(p.Character.PlayerId), p.Character.PlayerId);
+                    //AllRoles[p.Character.PlayerId] = (byte)status.getRole(p.Character.PlayerId);
+                }
+                _logger.LogInformation("追加役職のデータをbyte配列に変換しました");
+                foreach(var p in e.Game.Players) {
+                    _logger.LogInformation("役職通知繰り返し処理");
+                    var writer = e.Game.StartRpc(p.Character.NetId, (RpcCalls)CustomRPC.SetCustomRoles, p.Client.Id);
+                    writer.WriteBytesAndSize(AllRoles);
+                    e.Game.FinishRpcAsync(writer);
                     var role = status.getRole(p.Character.PlayerId);
                     noticeRoleByName(p,role,e.Game);
                 }
@@ -78,16 +101,20 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                 _logger.LogError("役職の割り当てに失敗しました:CustomStatusの取得に失敗しました");
                 return;
             }
+            _logger.LogInformation("CustomStatusを取得しました");
             List<Api.Net.IClientPlayer> valid = new List<Api.Net.IClientPlayer>();
             foreach(var p in list) {
-                if(status.getRole(p.Character.PlayerId) == customRoles.Default) valid.Add(p);
+                if(status.getRole(p.Character.PlayerId) == customRoles.Default ||
+                status.getRole(p.Character.PlayerId) == customRoles.Impostor) valid.Add(p);
             }
             if(valid.Count == 0) {
                 _logger.LogError("役職の割り当てに失敗しました:割り当て可能なプレイヤーが存在しません");
                 return;
             }
+            _logger.LogInformation("割り当て可能なプレイヤーのリストを作成しました");
             var assignID = rand.Next(valid.Count);
-            status.PlayerRoles.Add(valid[assignID].Character.PlayerId, role);
+            _logger.LogInformation("乱数を取得しました");
+            status.PlayerRoles[valid[assignID].Character.PlayerId] = role;
             _logger.LogInformation(role.ToString() + " => " + /*valid[assignID].Character.PlayerInfo.PlayerName*/" - ");
         }
         public void noticeRoleByName(Api.Net.IClientPlayer player, customRoles role, Api.Games.IGame Game) {

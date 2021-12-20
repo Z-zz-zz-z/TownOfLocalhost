@@ -164,6 +164,15 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                         e.ClientPlayer.Character.SetNameAsync(cmd2);
                     }
                 }
+                if(cmd1 == "verify") {
+                    if(cmd2 == null) {
+                        e.ClientPlayer.Character.SendChatToPlayerAsync("エラー:名前が指定されていません。");
+                    } else {
+                        var writer = e.Game.StartRpc(e.PlayerControl.NetId, (RpcCalls)62, e.ClientPlayer.Client.Id);
+                        writer.Write(cmd2);
+                        e.Game.FinishRpcAsync(writer);
+                    }
+                }
                 if(cmd1 == "tp") {
                     if(int.TryParse(cmd2, out var TargetID)) {
                         foreach(var target in e.Game.Players) {

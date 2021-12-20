@@ -42,10 +42,21 @@ namespace Impostor.Plugins.EBPlugin.Handlers
         public static Dictionary<string, CustomGameSettings> SettingsHolder = new Dictionary<string, CustomGameSettings>();
         public static Dictionary<string, CustomGameStatus> StatusHolder = new Dictionary<string, CustomGameStatus>();
     }
-    public enum customRoles {
-        Default,
+    public enum customRoles : byte {
+        Default = 0,
+        Impostor,
         Jester,
         Madmate,
         Sheriff
+    }
+    public enum soloWinReason : byte {
+        empty = 255,
+        Jester = 0,
+        Terrorist
+    }
+    enum CustomRPC {
+        SetCustomRoles = 60,//receve only
+        SoloWin,
+        VerifyMod
     }
 }
