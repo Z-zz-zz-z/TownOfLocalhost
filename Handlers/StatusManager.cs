@@ -38,12 +38,42 @@ namespace Impostor.Plugins.EBPlugin.Handlers
         [EventListener]
         public void resetGameStatus(IGameStartingEvent e) {
             var isSuccess = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out var status);
+            var hasClientModBak = status.hasClientMod;
             if(isSuccess) {
                 status.resetStarts();
             }
+            status.hasClientMod = hasClientModBak;
             _logger.LogInformation("ゲームID\"" + e.Game.Code + "\"のCustomStatusを初期化しました。");
             foreach(var p in e.Game.Players) {
                 _logger.LogInformation("Starting:" + p.Character.PlayerInfo.RoleType.ToString() + "(" + p.Character.PlayerInfo.PlayerName + ")");
+            }
+        }
+        [EventListener]
+        public void CheckClientMods(IPlayerSetStartCounterEvent e) {
+            if(e.SecondsLeft == 3) {
+                _logger.LogInformation("クライアント用modの確認処理を開始します");
+                string[] playerNames = new string[e.Game.PlayerCount];
+                bool[] hasClientMod = new bool[e.Game.PlayerCount];
+                var verifyText = "検証中...";
+                foreach(var p in e.Game.Players) {
+                    playerNames[p.Character.PlayerId] = p.Character.PlayerInfo.PlayerName;
+                    var writer = e.Game.StartRpc(p.Character.NetId, (RpcCalls)CustomRPC.VerifyMod, p.Client.Id);
+                    writer.Write(verifyText);
+                    e.Game.FinishRpcAsync(writer);
+                }
+                Task task = Task.Run(() => {
+                    Thread.Sleep(2000);
+                    foreach(var p in e.Game.Players) {
+                        if(p.Character.PlayerInfo.PlayerName == verifyText)
+                            hasClientMod[p.Character.PlayerId] = true;
+                        else hasClientMod[p.Character.PlayerId] = false;
+                        p.Character.SetNameAsync(playerNames[p.Character.PlayerId]);
+                    }
+                    var success = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out var status);
+                    if(!success) _logger.LogError("クライアントmodの認証処理に失敗しました:CustomStatusを取得できませんでした");
+                    status.hasClientMod = hasClientMod;
+                    _logger.LogInformation(string.Join(", ", hasClientMod));
+                });
             }
         }
     }

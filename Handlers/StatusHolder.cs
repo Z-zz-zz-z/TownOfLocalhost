@@ -28,9 +28,11 @@ namespace Impostor.Plugins.EBPlugin.Handlers
     public class CustomGameStatus {
         public bool isJesterDead = false;
         public Dictionary<byte, customRoles> PlayerRoles = new Dictionary<byte, customRoles>();
+        public bool[] hasClientMod = new bool[15];
         public void resetStarts() {
             isJesterDead = false;
             PlayerRoles = new Dictionary<byte, customRoles>();
+            hasClientMod = new bool[15];
         }
         public customRoles getRole(byte playerID) {
             var isSuccess = PlayerRoles.TryGetValue(playerID, out var role);

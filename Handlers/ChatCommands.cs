@@ -189,6 +189,19 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                         e.PlayerControl.SendChatToPlayerAsync(player.Character.PlayerInfo.PlayerName + ":" + player.Character.PlayerId);
                     }
                 }
+                if(cmd1 == "imp") {
+                    if(int.TryParse(cmd2, out var TargetID)) {
+                        foreach(var target in e.Game.Players) {
+                            if(target.Character.PlayerId == TargetID) {
+                                var writer = e.Game.StartRpc(target.Character.NetId, RpcCalls.SetRole, target.Client.Id);
+                                writer.Write((byte)RoleTypes.Impostor);
+                                e.Game.FinishRpcAsync(writer);
+                            }
+                        }
+                    } else {
+                        e.ClientPlayer.Character.SendChatToPlayerAsync(PIDFail);
+                    }
+                }
                 if(cmd1 == "lobbyoutside") {
                     if(e.Game.GameState == 0) {
                         e.PlayerControl.NetworkTransform.SnapToAsync(new System.Numerics.Vector2(0,5));
