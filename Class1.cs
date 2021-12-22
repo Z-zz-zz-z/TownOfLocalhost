@@ -48,7 +48,4 @@ namespace Impostor.Plugins.EBPlugin
             return default;
         }
     }
-    public enum customRPC {
-        jesterWin = 0
-    }
 }

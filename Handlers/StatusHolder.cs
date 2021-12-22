@@ -29,10 +29,12 @@ namespace Impostor.Plugins.EBPlugin.Handlers
         public bool isJesterDead = false;
         public Dictionary<byte, customRoles> PlayerRoles = new Dictionary<byte, customRoles>();
         public bool[] hasClientMod = new bool[15];
+        public List<byte> SheriffPlayerIDs = new List<byte>();
         public void resetStarts() {
             isJesterDead = false;
             PlayerRoles = new Dictionary<byte, customRoles>();
             hasClientMod = new bool[15];
+            SheriffPlayerIDs = new List<byte>();
         }
         public customRoles getRole(byte playerID) {
             var isSuccess = PlayerRoles.TryGetValue(playerID, out var role);
@@ -56,9 +58,10 @@ namespace Impostor.Plugins.EBPlugin.Handlers
         Jester = 0,
         Terrorist
     }
-    enum CustomRPC {
+    public enum CustomRPC {
         SetCustomRoles = 60,//receve only
         SoloWin,
-        VerifyMod
+        VerifyMod,
+        SetNotImpostors
     }
 }

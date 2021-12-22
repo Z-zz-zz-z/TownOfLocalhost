@@ -47,6 +47,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
             foreach(var p in e.Game.Players) {
                 _logger.LogInformation("Starting:" + p.Character.PlayerInfo.RoleType.ToString() + "(" + p.Character.PlayerInfo.PlayerName + ")");
             }
+            assignRoles.AssignFakeImpostors(e,_logger);
         }
         [EventListener]
         public void CheckClientMods(IPlayerSetStartCounterEvent e) {

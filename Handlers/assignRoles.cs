@@ -43,23 +43,27 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                      + "(" + /*p.Character.PlayerInfo.PlayerName*/" - " + ")");
                     switch(p.Character.PlayerInfo.RoleType) {
                         case RoleTypes.Crewmate:
+                            if(status.PlayerRoles.ContainsKey(p.Character.PlayerId)) continue;
                             Crewmates.Add(p);
                             status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                         case RoleTypes.Impostor:
+                            if(status.PlayerRoles.ContainsKey(p.Character.PlayerId)) continue;
                             Impostors.Add(p);
-                            //status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Impostor);DEBUG
-                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
+                            status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Impostor);
                             break;
                         case RoleTypes.Scientist:
+                            if(status.PlayerRoles.ContainsKey(p.Character.PlayerId)) continue;
                             Scientists.Add(p);
                             status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                         case RoleTypes.Engineer:
+                            if(status.PlayerRoles.ContainsKey(p.Character.PlayerId)) continue;
                             Engineers.Add(p);
                             status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Default);
                             break;
                         case RoleTypes.Shapeshifter:
+                            if(status.PlayerRoles.ContainsKey(p.Character.PlayerId)) continue;
                             Shapeshifters.Add(p);
                             status.PlayerRoles.Add(p.Character.PlayerId, customRoles.Impostor);
                             break;
@@ -77,16 +81,12 @@ namespace Impostor.Plugins.EBPlugin.Handlers
 
                 for(var i = 0; i < settings.JesterCount; i++) setRoleInList(e.Game.Code, Crewmates, customRoles.Jester);
                 for(var i = 0; i < settings.MadmateCount; i++) setRoleInList(e.Game.Code, Engineers, customRoles.Madmate);
-
-                if(HostHasClientMods) {
-                     for(var i = 0; i < settings.SheriffCount; i++) setRoleInList(e.Game.Code, Impostors, customRoles.Sheriff);
-                } else _logger.LogWarning("警告:ホストのクライアントmodを確認できませんでした。一部の役職が利用不可になります");
                 
                 successToGetStatus = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out status);
                 if(!successToGetStatus) _logger.LogError("ゲーム開始処理に失敗しました:CustomStatusの取得に失敗しました");
 
                 //GuardianAngelの設定
-                foreach(var p in e.Game.Players) {
+                /*foreach(var p in e.Game.Players) {
                     var role = status.getRole(p.Character.PlayerId);
                     if(role == customRoles.Impostor) foreach(var p2 in e.Game.Players) {
                         var role2 = status.getRole(p2.Character.PlayerId);
@@ -106,17 +106,18 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                             e.Game.FinishRpcAsync(writer);
                         }
                     }
-                }
+                }*/
                 _logger.LogInformation("SetGuardianAngelの処理が完了しました");
 
                 //役職通知
                 _logger.LogInformation("追加役職のデータをbyte配列に変換します");
-                byte[] AllRoles = new byte[15];
+                byte[] AllRoles = new byte[e.Game.PlayerCount];
                 foreach(var p in e.Game.Players) {
                     AllRoles.SetValue((byte)status.getRole(p.Character.PlayerId), p.Character.PlayerId);
                     //AllRoles[p.Character.PlayerId] = (byte)status.getRole(p.Character.PlayerId);
                 }
                 _logger.LogInformation("追加役職のデータをbyte配列に変換しました");
+                _logger.LogInformation(string.Join(", ", AllRoles));
                 foreach(var p in e.Game.Players) {
                     //_logger.LogInformation("役職通知繰り返し処理");
                     var writer = e.Game.StartRpc(p.Character.NetId, (RpcCalls)CustomRPC.SetCustomRoles, p.Client.Id);
@@ -178,6 +179,48 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                 Thread.Sleep(20000);
                 player.Character.SetNameAsync(beforeName);
             });
+        }
+        public static void AssignFakeImpostors(IGameStartingEvent e, ILogger<EmptyBottlePlugin> _logger) {
+            _logger.LogInformation("FakeImpostor系役職の割り当てを開始します");
+            var SuccessForGetSettings = CustomStatusHolder.SettingsHolder.TryGetValue(e.Game.Code, out var settings);
+            var SuccessForGetStatus = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out var status);
+            if(!SuccessForGetSettings || !SuccessForGetStatus) {
+                _logger.LogError("エラー:CustomSettingsまたはCustomStatusの取得に失敗しました");
+                return;
+            }
+
+            List<byte> AssignedPlayersID = new List<byte>();
+            List<Api.Net.IClientPlayer> Players = new List<Api.Net.IClientPlayer>();
+            foreach(var p in e.Game.Players) {Players.Add(p);}
+            if(settings.SheriffCount > 0)
+            for(var i = 0; i < settings.SheriffCount; i++) { //Sheriff
+                var t = Players[rand.Next(Players.Count)];
+                AssignedPlayersID.Add(t.Character.PlayerId);
+                status.PlayerRoles[t.Character.PlayerId] = customRoles.Sheriff;
+                if(t.IsHost) continue;
+                foreach(var p in e.Game.Players) {
+                    if(p.Character.PlayerId == t.Character.PlayerId) {
+                        var writer = e.Game.StartRpc(p.Character.NetId, RpcCalls.SetRole, t.Client.Id);
+                        writer.Write((byte)RoleTypes.Impostor);
+                        e.Game.FinishRpcAsync(writer);
+                    } else {
+                        var writer = e.Game.StartRpc(p.Character.NetId, RpcCalls.SetRole, t.Client.Id);
+                        writer.Write((byte)RoleTypes.Crewmate);
+                        e.Game.FinishRpcAsync(writer);
+                    }
+                }
+            }
+
+            //ホストへのRPC
+            var NotImpostors = AssignedPlayersID.ToArray();
+            foreach(var p in e.Game.Players) {
+                if(p.IsHost) {
+                    var writer = e.Game.StartRpc(p.Character.NetId, (RpcCalls)CustomRPC.SetNotImpostors, p.Client.Id);
+                    writer.WriteBytesAndSize(NotImpostors);
+                    e.Game.FinishRpcAsync(writer);
+                }
+            }
+            _logger.LogInformation(string.Join(", ", NotImpostors));
         }
     }
 }

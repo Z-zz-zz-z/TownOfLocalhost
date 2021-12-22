@@ -193,9 +193,17 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     if(int.TryParse(cmd2, out var TargetID)) {
                         foreach(var target in e.Game.Players) {
                             if(target.Character.PlayerId == TargetID) {
-                                var writer = e.Game.StartRpc(target.Character.NetId, RpcCalls.SetRole, target.Client.Id);
-                                writer.Write((byte)RoleTypes.Impostor);
-                                e.Game.FinishRpcAsync(writer);
+                                foreach(var p in e.Game.Players) {
+                                    if(p.Character.PlayerId == TargetID) {
+                                        var writer = e.Game.StartRpc(p.Character.NetId, RpcCalls.SetRole, target.Client.Id);
+                                        writer.Write((byte)RoleTypes.Impostor);
+                                        e.Game.FinishRpcAsync(writer);
+                                    } else {
+                                        var writer = e.Game.StartRpc(p.Character.NetId, RpcCalls.SetRole, target.Client.Id);
+                                        writer.Write((byte)RoleTypes.Crewmate);
+                                        e.Game.FinishRpcAsync(writer);
+                                    }
+                                }
                             }
                         }
                     } else {
