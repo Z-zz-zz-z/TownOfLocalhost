@@ -40,7 +40,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                 if(!successToGetStatus) _logger.LogError("ゲーム開始処理に失敗しました:CustomStatusの取得に失敗しました");
                 foreach(var p in e.Game.Players) {
                     _logger.LogInformation("Started:" + p.Character.PlayerInfo.RoleType.ToString()
-                     + "(" + /*p.Character.PlayerInfo.PlayerName*/" - " + ")");
+                     + "(" + p.Character.PlayerInfo.PlayerName/*" - "*/ + ")");
                     switch(p.Character.PlayerInfo.RoleType) {
                         case RoleTypes.Crewmate:
                             if(status.PlayerRoles.ContainsKey(p.Character.PlayerId)) continue;
@@ -84,30 +84,6 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                 
                 successToGetStatus = CustomStatusHolder.StatusHolder.TryGetValue(e.Game.Code, out status);
                 if(!successToGetStatus) _logger.LogError("ゲーム開始処理に失敗しました:CustomStatusの取得に失敗しました");
-
-                //GuardianAngelの設定
-                /*foreach(var p in e.Game.Players) {
-                    var role = status.getRole(p.Character.PlayerId);
-                    if(role == customRoles.Impostor) foreach(var p2 in e.Game.Players) {
-                        var role2 = status.getRole(p2.Character.PlayerId);
-                        if(role2 != customRoles.Impostor) {
-                            var writer = e.Game.StartRpc(p2.Character.NetId, RpcCalls.SetRole, p.Client.Id);
-                            writer.Write((byte)RoleTypes.GuardianAngel);
-                            e.Game.SendToAsync(writer, p.Client.Id);
-                            e.Game.FinishRpcAsync(writer);
-                        }
-                    }
-                    if(role == customRoles.Sheriff) foreach(var p3 in e.Game.Players) {
-                        var role2 = status.getRole(p3.Character.PlayerId);
-                        var writer = e.Game.StartRpc(p3.Character.NetId, RpcCalls.SetRole, p.Client.Id);
-                        if(p.Character.PlayerId != p3.Character.PlayerId) {
-                            writer.Write((byte)RoleTypes.GuardianAngel);
-                            e.Game.SendToAsync(writer, p.Client.Id);
-                            e.Game.FinishRpcAsync(writer);
-                        }
-                    }
-                }*/
-                _logger.LogInformation("SetGuardianAngelの処理が完了しました");
 
                 //役職通知
                 _logger.LogInformation("追加役職のデータをbyte配列に変換します");
@@ -165,6 +141,14 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                         break;
                     case customRoles.Sheriff:
                         noticeName = "You Are Sheriff\r\nあなたはシェリフです";
+                        var sheriffSettings = Game.Options;
+                        sheriffSettings.ImpostorLightMod = sheriffSettings.CrewLightMod * 0.8f;
+                        var memory = new MemoryStream();
+                        var writerBin = new BinaryWriter(memory);
+                        sheriffSettings.Serialize(writerBin, GameOptionsData.LatestVersion);
+                        var VisionWriter = Game.StartRpc(player.Character.NetId, RpcCalls.SyncSettings, player.Client.Id);
+                        VisionWriter.WriteBytesAndSize(memory.ToArray());
+                        Game.FinishRpcAsync(VisionWriter);
                         break;
                     default:
                         noticeName = "Playing on localhost";
@@ -195,9 +179,10 @@ namespace Impostor.Plugins.EBPlugin.Handlers
             if(settings.SheriffCount > 0)
             for(var i = 0; i < settings.SheriffCount; i++) { //Sheriff
                 var t = Players[rand.Next(Players.Count)];
+                t = Players[0];//デバッグ用 後で消すこと
                 AssignedPlayersID.Add(t.Character.PlayerId);
                 status.PlayerRoles[t.Character.PlayerId] = customRoles.Sheriff;
-                if(t.IsHost) continue;
+                //if(t.IsHost) continue;
                 foreach(var p in e.Game.Players) {
                     if(p.Character.PlayerId == t.Character.PlayerId) {
                         var writer = e.Game.StartRpc(p.Character.NetId, RpcCalls.SetRole, t.Client.Id);
@@ -213,6 +198,8 @@ namespace Impostor.Plugins.EBPlugin.Handlers
 
             //ホストへのRPC
             var NotImpostors = AssignedPlayersID.ToArray();
+            _logger.LogInformation(NotImpostors.Length.ToString());
+            if(NotImpostors.Length > 0)
             foreach(var p in e.Game.Players) {
                 if(p.IsHost) {
                     var writer = e.Game.StartRpc(p.Character.NetId, (RpcCalls)CustomRPC.SetNotImpostors, p.Client.Id);

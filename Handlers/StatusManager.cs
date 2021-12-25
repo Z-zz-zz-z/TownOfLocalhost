@@ -49,6 +49,12 @@ namespace Impostor.Plugins.EBPlugin.Handlers
             }
             assignRoles.AssignFakeImpostors(e,_logger);
         }
+
+        [EventListener]
+        public void BreakSettingsAndStatus(IGameDestroyedEvent e) {
+            CustomStatusHolder.SettingsHolder.Remove(e.Game.Code);
+            CustomStatusHolder.StatusHolder.Remove(e.Game.Code);
+        }
         [EventListener]
         public void CheckClientMods(IPlayerSetStartCounterEvent e) {
             if(e.SecondsLeft == 3) {

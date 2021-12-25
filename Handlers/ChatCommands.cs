@@ -42,7 +42,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     cmd1 = e.Message.Substring(1, FirstSpace - 1);
                     cmd2 = e.Message.Substring(FirstSpace + 1);
                 }
-                var PIDFail = "エラー:IDを正常に変換できませんでした。\r\n()内の数字を正確に入力してください。";
+                var PIDFail = "エラー:数値の引数を正常に変換できませんでした。";
                 var PlayerCTRL = e.PlayerControl;
                 CustomStatusHolder.SettingsHolder.TryGetValue(e.Game.Code, out var settings);
                 //役職設定
@@ -71,7 +71,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     if(int.TryParse(cmd2, out cmd2int)) {
                         settings.SheriffCount = cmd2int;
                         PlayerCTRL.SendChatToPlayerAsync("Sheriffを" + cmd2 + "人に設定しました\r\n" + 
-                        "インポスターを一人Madmateに置き換えます");
+                        "無からSheriffを一人割り当てます");
                     } else {
                         PlayerCTRL.SendChatToPlayerAsync(PIDFail);
                     }
@@ -139,7 +139,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 //試合中のコマンド
-                if(cmd1 == "killgame") {
+                if(cmd1 == "endgame") {
                     if(e.ClientPlayer.IsHost) {
                         foreach(var player in e.Game.Players) {
                             if(player.Character.PlayerInfo.IsImpostor) {
@@ -231,9 +231,9 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                     if(cmd2 == "role") {
                         e.ClientPlayer.Character.SendChatToPlayerAsync(
-                            "/teruteru, /sheriff, /stopper\r\n" + 
-                            "/fasttroll, /magnettroll, /madmate\r\n" + 
-                            "/suicider, /leader, /clone, /randomthird"
+                            "/<役職名> <人数>\\r\n" + 
+                            "役職名の一覧は以下の通りです\r\n"+
+                            "jester, madmate, sheriff"
                             );
                     }
                     if(cmd2 == "option") {
