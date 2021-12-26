@@ -43,10 +43,12 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     cmd2 = e.Message.Substring(FirstSpace + 1);
                 }
                 var PIDFail = "エラー:数値の引数を正常に変換できませんでした。";
+                var NotHost = "エラー:あなたはホストではありません";
                 var PlayerCTRL = e.PlayerControl;
                 CustomStatusHolder.SettingsHolder.TryGetValue(e.Game.Code, out var settings);
                 //役職設定
                 if(cmd1 == "jester") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     int cmd2int;
                     if(int.TryParse(cmd2, out cmd2int)) {
                         settings.JesterCount = cmd2int;
@@ -57,6 +59,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "madmate") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     int cmd2int;
                     if(int.TryParse(cmd2, out cmd2int)) {
                         settings.MadmateCount = cmd2int;
@@ -67,6 +70,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "sheriff") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     int cmd2int;
                     if(int.TryParse(cmd2, out cmd2int)) {
                         settings.SheriffCount = cmd2int;
@@ -78,6 +82,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                 }
                 //部屋の設定
                 if(cmd1 == "killcool") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     float cmd2float;
                     if(float.TryParse(cmd2, out cmd2float)) {
                         e.Game.Options.KillCooldown = cmd2float;
@@ -88,6 +93,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "commontask") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     int cmd2int;
                     if(int.TryParse(cmd2, out cmd2int)) {
                         e.Game.Options.NumCommonTasks = cmd2int;
@@ -98,6 +104,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "longtask") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     int cmd2int;
                     if(int.TryParse(cmd2, out cmd2int)) {
                         e.Game.Options.NumLongTasks = cmd2int;
@@ -108,6 +115,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "shorttask") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     int cmd2int;
                     if(int.TryParse(cmd2, out cmd2int)) {
                         e.Game.Options.NumShortTasks = cmd2int;
@@ -118,6 +126,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "map") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     if(cmd2 == "skeld") {
                         e.Game.Options.Map = MapTypes.Skeld;
                         PlayerCTRL.SendChatToPlayerAsync("mapをSkeldに変更しました。");
@@ -153,7 +162,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                             }
                         }
                     } else {
-                        PlayerCTRL.SendChatToPlayerAsync("エラー:あなたはホストではないため、このコマンドを実行できません。");
+                        PlayerCTRL.SendChatToPlayerAsync(NotHost);
                     }
                 }
                 //プレイヤーのオプション
@@ -165,6 +174,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "verify") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     if(cmd2 == null) {
                         e.ClientPlayer.Character.SendChatToPlayerAsync("エラー:名前が指定されていません。");
                     } else {
@@ -190,6 +200,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
                 if(cmd1 == "imp") {
+                    if(!isHost(e.ClientPlayer)) goto skipCmd;
                     if(int.TryParse(cmd2, out var TargetID)) {
                         foreach(var target in e.Game.Players) {
                             if(target.Character.PlayerId == TargetID) {
@@ -238,10 +249,8 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                     if(cmd2 == "option") {
                         e.ClientPlayer.Character.SendChatToPlayerAsync(
-                            "/stoppertime, /killcool /madmateknowsimpostor\r\n" + 
-                            "/map, /noscantask /hideandseek\r\n" + 
                             "/commontask, /longtask, /shorttask\r\n" + 
-                            "/targetmode"
+                            "/map"
                             );
                     }
                     if(cmd2 == "user") {
@@ -252,8 +261,16 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                     }
                 }
             //ログ
+            skipCmd:
             _logger.LogInformation("// Command executed.\r\n" + cmd1 + "\r\n" + cmd2);
             e.IsCancelled = true;
+            }
+        }
+        public static bool isHost(Api.Net.IClientPlayer player) {
+            if(player.IsHost) return true;
+            else {
+                player.Character.SendChatToPlayerAsync("エラー:あなたはホストではありません");
+                return false;
             }
         }
     }

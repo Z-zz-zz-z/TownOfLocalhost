@@ -16,6 +16,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Immutable;
 using ExtraPlayerFunctions.Desync;
+using System.Numerics;
 
 namespace Impostor.Plugins.EBPlugin.Handlers
 {
@@ -30,6 +31,7 @@ namespace Impostor.Plugins.EBPlugin.Handlers
         public Dictionary<byte, customRoles> PlayerRoles = new Dictionary<byte, customRoles>();
         public bool[] hasClientMod = new bool[15];
         public List<byte> SheriffPlayerIDs = new List<byte>();
+        public Dictionary<byte, Vector2> LastVentedPos = new Dictionary<byte, Vector2>();
         public void resetStarts() {
             isJesterDead = false;
             PlayerRoles = new Dictionary<byte, customRoles>();

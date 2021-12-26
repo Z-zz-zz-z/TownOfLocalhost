@@ -138,17 +138,41 @@ namespace Impostor.Plugins.EBPlugin.Handlers
                         break;
                     case customRoles.Madmate:
                         noticeName = "You Are Madmate\r\nあなたは狂人です";
+
+                        var MadRealCrewLight = Game.Options.CrewLightMod;
+                        var MadRealImpLight = Game.Options.ImpostorLightMod;
+
+                        Game.Options.CrewLightMod = MadRealImpLight;
+                        Game.Options.ImpostorLightMod = MadRealImpLight;
+
+                        var Madmemory = new MemoryStream();
+                        var MadwriterBin = new BinaryWriter(Madmemory);
+                        Game.Options.Serialize(MadwriterBin, GameOptionsData.LatestVersion);
+                        var MadVisionWriter = Game.StartRpc(player.Character.NetId, RpcCalls.SyncSettings, player.Client.Id);
+                        MadVisionWriter.WriteBytesAndSize(Madmemory.ToArray());
+                        Game.FinishRpcAsync(MadVisionWriter);
+
+                        Game.Options.CrewLightMod = MadRealCrewLight;
+                        Game.Options.ImpostorLightMod = MadRealImpLight;
                         break;
                     case customRoles.Sheriff:
                         noticeName = "You Are Sheriff\r\nあなたはシェリフです";
-                        var sheriffSettings = Game.Options;
-                        sheriffSettings.ImpostorLightMod = sheriffSettings.CrewLightMod * 0.8f;
-                        var memory = new MemoryStream();
-                        var writerBin = new BinaryWriter(memory);
-                        sheriffSettings.Serialize(writerBin, GameOptionsData.LatestVersion);
-                        var VisionWriter = Game.StartRpc(player.Character.NetId, RpcCalls.SyncSettings, player.Client.Id);
-                        VisionWriter.WriteBytesAndSize(memory.ToArray());
-                        Game.FinishRpcAsync(VisionWriter);
+
+                        var SheriffRealCrewLight = Game.Options.CrewLightMod;
+                        var SheriffRealImpLight = Game.Options.ImpostorLightMod;
+
+                        Game.Options.CrewLightMod = SheriffRealCrewLight * 0.8f;
+                        Game.Options.ImpostorLightMod = SheriffRealCrewLight * 0.8f;
+
+                        var Sheriffmemory = new MemoryStream();
+                        var SheriffwriterBin = new BinaryWriter(Sheriffmemory);
+                        Game.Options.Serialize(SheriffwriterBin, GameOptionsData.LatestVersion);
+                        var SheriffVisionWriter = Game.StartRpc(player.Character.NetId, RpcCalls.SyncSettings, player.Client.Id);
+                        SheriffVisionWriter.WriteBytesAndSize(Sheriffmemory.ToArray());
+                        Game.FinishRpcAsync(SheriffVisionWriter);
+
+                        Game.Options.CrewLightMod = SheriffRealCrewLight;
+                        Game.Options.ImpostorLightMod = SheriffRealImpLight;
                         break;
                     default:
                         noticeName = "Playing on localhost";
@@ -179,10 +203,9 @@ namespace Impostor.Plugins.EBPlugin.Handlers
             if(settings.SheriffCount > 0)
             for(var i = 0; i < settings.SheriffCount; i++) { //Sheriff
                 var t = Players[rand.Next(Players.Count)];
-                t = Players[0];//デバッグ用 後で消すこと
                 AssignedPlayersID.Add(t.Character.PlayerId);
                 status.PlayerRoles[t.Character.PlayerId] = customRoles.Sheriff;
-                //if(t.IsHost) continue;
+                if(t.IsHost) continue;
                 foreach(var p in e.Game.Players) {
                     if(p.Character.PlayerId == t.Character.PlayerId) {
                         var writer = e.Game.StartRpc(p.Character.NetId, RpcCalls.SetRole, t.Client.Id);
